@@ -1,5 +1,6 @@
 package peterbach1997.example.flickrbrowser
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -9,27 +10,40 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
 import peterbach1997.example.flickrbrowser.databinding.ActivityMainBinding
+import peterbach1997.example.flickrbrowser.databinding.ContentMainBinding
 
 class MainActivity : AppCompatActivity(), GetRawData.OnDownloadComplete,
-    GetFlickrJsonData.OnDataAvailable {
+    GetFlickrJsonData.OnDataAvailable,
+    RecyclerItemClickListener.OnRecyclerClickListener {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ContentMainBinding
+    private val flickrRecyclerViewAdapter = FlickrRecyclerViewAdapter(ArrayList())
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate: **********CALLED*********")
         super.onCreate(savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ContentMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        setSupportActionBar(binding.toolbar)
-
+//        setSupportActionBar(binding.toolbar)
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.addOnItemTouchListener(
+            RecyclerItemClickListener(
+                this,
+                binding.recyclerView,
+                this
+            )
+        )
+        binding.recyclerView.adapter = flickrRecyclerViewAdapter
         val url = createUri(
             "https://www.flickr.com/services/feeds/photos_public.gne",
-            "android, oreo",
+            "arduino",
             "en-us",
             true
         )
@@ -68,14 +82,17 @@ class MainActivity : AppCompatActivity(), GetRawData.OnDownloadComplete,
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.item_search -> {
+                startActivity(Intent(this, SearchActivity::class.java))
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
     override fun onSupportNavigateUp(): Boolean {
         Log.d(TAG, "onSupportNavigateUp: **********************CALLED******************")
-        return  super.onSupportNavigateUp()
+        return super.onSupportNavigateUp()
     }
 
     companion object {
@@ -98,10 +115,29 @@ class MainActivity : AppCompatActivity(), GetRawData.OnDownloadComplete,
 
     override fun onDataAvailable(data: List<Photo>) {
         Log.d(TAG, "onDataAvailable: called")
+        flickrRecyclerViewAdapter.loadNewPhoto(data)
+        Log.d(TAG, "onDataAvailable: ENDED")
     }
 
     override fun error(e: Exception) {
         Log.d(TAG, "error: called")
+    }
+
+    override fun onItemClick(view: View, position: Int) {
+        Toast.makeText(this, "onItemClick: $position", Toast.LENGTH_LONG).show()
+        Log.i(TAG, "onItemClick: ******************CALLED")
+        val photo = flickrRecyclerViewAdapter.getPhoto(position)
+        if (photo != null) {
+            val intent = Intent(this, PhotoDetailActivity::class.java)
+            intent.putExtra(PHOTO_TRANSFER, photo)
+            startActivity(intent)
+        }
+
+    }
+
+    override fun onItemLongClick(view: View, position: Int) {
+        Toast.makeText(this, "onItemLongClick: $position", Toast.LENGTH_LONG).show()
+        Log.i(TAG, "onItemLongClick: ******************CALLED")
     }
 
 

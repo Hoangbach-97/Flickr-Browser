@@ -1,13 +1,15 @@
 package peterbach1997.example.flickrbrowser
 
+import java.io.Serializable
+
 class Photo(
-    private val title: String,
-    private val author: String,
-    private val authorId: String,
-    private val link: String,
-    private val tags: String,
-    private val image: String
-)  {
+     val title: String,
+     val author: String,
+     val authorId: String,
+     val link: String,
+     val tags: String,
+     val image: String
+):Serializable  {
     override fun toString(): String {
         return "Photo(title='$title', author='$author', authorId='$authorId', link='$link', tags='$tags', image='$image')"
     }
